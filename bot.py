@@ -1,13 +1,13 @@
 async def fetch_stock_async(symbol):
-    # Perbaikan URL endpoint resmi GoAPI untuk mengambil harga/data saham
-    url = f"https://api.goapi.io/v1/stock/idx/price?symbols={symbol}"
+    # Menggunakan endpoint dengan menyertakan api_key langsung sebagai parameter URL
+    url = f"https://api.goapi.io/v1/stock/idx/prices?symbols={symbol}&api_key={GOAPI_KEY}"
     loop = asyncio.get_event_loop()
     
     def _fetch():
         try:
             headers = {
                 "User-Agent": "Mozilla/5.0",
-                "Authorization": GOAPI_KEY  # Sesuai standar dokumentasi GoAPI (tanpa Bearer)
+                "Accept": "application/json"
             }
             req = urllib.request.Request(url, headers=headers)
             with urllib.request.urlopen(req, timeout=8) as response:
@@ -16,7 +16,6 @@ async def fetch_stock_async(symbol):
                 if res_data.get("status") != "success" or "data" not in res_data:
                     return None
 
-                # Menyesuaikan dengan format balikan data dari endpoint price GoAPI
                 data_list = res_data["data"]
                 if not data_list:
                     return None
