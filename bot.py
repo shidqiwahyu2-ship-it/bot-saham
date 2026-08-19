@@ -1,7 +1,7 @@
 import os
 import logging
 from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
+from telegram.ext import Application, CommandHandler, ContextTypes
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -23,8 +23,6 @@ async def cek_saham(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
     
     symbol = context.args[0].upper()
-    
-    # Kalkulasi instan akurat
     seed_val = sum(ord(c) for c in symbol)
     price = (seed_val * 43) % 750 + 90
     change_pct = ((seed_val % 12) - 4) * 0.8
@@ -69,14 +67,15 @@ def main():
         logger.error("TELEGRAM_TOKEN tidak ditemukan di Environment Variables!")
         return
 
-    app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
+    # Menggunakan Application.builder() yang aman
+    application = Application.builder().token(TELEGRAM_TOKEN).build()
     
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("cek", cek_saham))
-    app.add_handler(CommandHandler("wajibpantau", wajib_pantau))
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(CommandHandler("cek", cek_saham))
+    application.add_handler(CommandHandler("wajibpantau", wajib_pantau))
 
     logger.info("Bot Telegram berhasil dijalankan...")
-    app.run_polling()
+    application.run_polling()
 
 if __name__ == "__main__":
     main()
