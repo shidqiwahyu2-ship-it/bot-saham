@@ -1,25 +1,25 @@
 import os
 import logging
 from telegram import Update
-from telegram.ext import Application, CommandHandler, ContextTypes
+from telegram.ext import Updater, CommandHandler, CallbackContext
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+def start(update: Update, context: CallbackContext):
     welcome_text = (
         "🤖 **Bot Analisa & Radar Saham Aktif!**\n\n"
         "📌 **Perintah Tersedia:**\n"
         "• `/wajibpantau` - Scan cepat saham potensial\n"
         "• `/cek KJEN` - Analisa 1 saham spesifik (contoh: KJEN, BBCA, ASII)"
     )
-    await update.message.reply_text(welcome_text, parse_mode="Markdown")
+    update.message.reply_text(welcome_text, parse_mode="Markdown")
 
-async def cek_saham(update: Update, context: ContextTypes.DEFAULT_TYPE):
+def cek_saham(update: Update, context: CallbackContext):
     if not context.args:
-        await update.message.reply_text("⚠️ Harap masukkan kode sahamnya! Contoh: `/cek KJEN`", parse_mode="Markdown")
+        update.message.reply_text("⚠️ Harap masukkan kode sahamnya! Contoh: `/cek KJEN`", parse_mode="Markdown")
         return
     
     symbol = context.args[0].upper()
@@ -50,9 +50,9 @@ async def cek_saham(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"• **Supertrend:** `Rp {supertrend_val:,}` ({supertrend_signal})\n\n"
         f"📢 **Insight:**\n{berita}"
     )
-    await update.message.reply_text(response_text, parse_mode="Markdown")
+    update.message.reply_text(response_text, parse_mode="Markdown")
 
-async def wajib_pantau(update: Update, context: ContextTypes.DEFAULT_TYPE):
+def wajib_pantau(update: Update, context: CallbackContext):
     text = (
         "🚀 **RADAR SAHAM POTENSIAL (< Rp 1.000)**\n\n"
         "1. **$KJEN** - Pantau volatilitas & breakout.\n"
@@ -60,22 +60,23 @@ async def wajib_pantau(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "3. **$BUMI** - Likuiditas tinggi.\n\n"
         "Gunakan `/cek [KODE]` untuk melihat detail."
     )
-    await update.message.reply_text(text, parse_mode="Markdown")
+    update.message.reply_text(text, parse_mode="Markdown")
 
 def main():
     if not TELEGRAM_TOKEN:
         logger.error("TELEGRAM_TOKEN tidak ditemukan di Environment Variables!")
         return
 
-    # Menggunakan Application.builder() yang aman
-    application = Application.builder().token(TELEGRAM_TOKEN).build()
+    updater = Updater(TELEGRAM_TOKEN, use_context=True)
+    dispatcher = updater.dispatcher
     
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(CommandHandler("cek", cek_saham))
-    application.add_handler(CommandHandler("wajibpantau", wajib_pantau))
+    dispatcher.add_handler(CommandHandler("start", start))
+    dispatcher.add_handler(CommandHandler("cek", cek_saham))
+    dispatcher.add_handler(CommandHandler("wajibpantau", wajib_pantau))
 
     logger.info("Bot Telegram berhasil dijalankan...")
-    application.run_polling()
+    updater.start_polling()
+    updater.idle()
 
 if __name__ == "__main__":
     main()
