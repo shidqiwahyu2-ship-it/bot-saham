@@ -1,5 +1,4 @@
 async def fetch_stock_async(symbol):
-    # Menggunakan endpoint resmi GoAPI yang benar: /v1/stock/idx/prices
     url = f"https://api.goapi.io/v1/stock/idx/prices?symbols={symbol}"
     loop = asyncio.get_event_loop()
     
@@ -7,18 +6,25 @@ async def fetch_stock_async(symbol):
         try:
             headers = {
                 "User-Agent": "Mozilla/5.0",
-                "X-API-Key": GOAPI_KEY,  # Standar auth GoAPI menggunakan header X-API-Key
+                "X-API-Key": GOAPI_KEY,
                 "Accept": "application/json"
             }
+            print(f"DEBUG: Mengakses URL {url} dengan Key length: {len(GOAPI_KEY) if GOAPI_KEY else 0}")
+            
             req = urllib.request.Request(url, headers=headers)
-            with urllib.request.urlopen(req, timeout=8) as response:
-                res_data = json.loads(response.read().decode())
+            with urllib.request.urlopen(req, timeout=10) as response:
+                raw_body = response.read().decode()
+                print(f"DEBUG: Response dari GoAPI: {raw_body[:200]}") # Cetak sebagian response di log Railway
+                
+                res_data = json.loads(raw_body)
                 
                 if res_data.get("status") != "success" or "data" not in res_data:
+                    print(f"DEBUG: Status bukan success atau data tidak ditemukan. Status: {res_data.get('status')}")
                     return None
 
                 data_list = res_data["data"]
                 if not data_list:
+                    print("DEBUG: Data list kosong.")
                     return None
                     
                 d = data_list[0] if isinstance(data_list, list) else data_list
@@ -95,7 +101,7 @@ async def fetch_stock_async(symbol):
                     "macd_status": "🟢 BULLISH CROSS"
                 }
         except Exception as e:
-            print(f"Error fetching {symbol}: {e}")
+            print(f"ERROR TERDETEKSI saat fetch {symbol}: {e}")
             return None
 
     return await loop.run_in_executor(None, _fetch)
