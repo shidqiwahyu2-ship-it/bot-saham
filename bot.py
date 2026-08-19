@@ -1,12 +1,13 @@
 async def fetch_stock_async(symbol):
-    # Menggunakan endpoint dengan menyertakan api_key langsung sebagai parameter URL
-    url = f"https://api.goapi.io/v1/stock/idx/prices?symbols={symbol}&api_key={GOAPI_KEY}"
+    # Menggunakan endpoint resmi GoAPI yang benar: /v1/stock/idx/prices
+    url = f"https://api.goapi.io/v1/stock/idx/prices?symbols={symbol}"
     loop = asyncio.get_event_loop()
     
     def _fetch():
         try:
             headers = {
                 "User-Agent": "Mozilla/5.0",
+                "X-API-Key": GOAPI_KEY,  # Standar auth GoAPI menggunakan header X-API-Key
                 "Accept": "application/json"
             }
             req = urllib.request.Request(url, headers=headers)
